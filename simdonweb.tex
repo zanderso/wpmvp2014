@@ -31,7 +31,32 @@
 
 \usepackage{amsmath}
 \usepackage{graphicx}
-\usepackage{hyperref}
+
+
+%
+% Load hyperref
+%
+\ifx\pdfoutput\undefined     %This is for regular output
+  \def\nestedref{\protect\ref}
+  \def\pdfbookmark#1#2{}%      % need this for non-pdf to work
+\else %Use hyperref only if we run as pdflatex
+  \usepackage[pdftex,
+              colorlinks,
+              linkcolor=blue,
+              citecolor=red,
+              pdfview=xyz,
+              plainpages=false,
+              pdfstartview=Fit,
+              pdfhighlight=/P
+              ]{hyperref}
+  \def\nestedref{\protect\ref*}
+      %Redefine the cross-referencing with no page references
+ \long\def\genreftext#1#2#3#4{#1~#2}
+\fi
+
+
+% hyphen-able fixed-width font
+\newcommand{\ttt}[1]{{\texttt{\hyphenchar\font=`\-\relax #1}}}%`
 
 \begin{document}
 
@@ -73,7 +98,7 @@ It has not possible to take advantage of the SIMD coprocessors available in all 
 \section{Introduction}
 All x86 and many ARM processors shipping today include a dedicated single instruction multiple data (SIMD) coprocessor.  On x86 the SSE instruction set allows for computing on 128-bit wide registers. ARM has the NEON instruction set which allows for computing on 128-bit wide registers. Both SSE and NEON have instructions for computing on 4 single precision floating point numbers (Float32x4) and 4 signed integers (Int32x4) stored in 128-bit registers. There are also instructions available for operating on 2 double precision floating point numbers (Float64x2) as well as algorithm specific instructions for operating on sound or pixel data.
 
-Web browsers as a platform to deliver complex applications with feature sets and performance that are comparable to native desktop applications has become mainstream. All major browsers (Chrome, Firefox, Safari, and IE) include support for displaying 3D graphics through WebGL, playing 3D positional audio through WebAudio. These applications are written directly in JavaScript, Dart, or compiled to JavaScript from C/C++ code through the LLVM based emscripten\cite{emscripten} compiler. Starting in 2008 with the advent of the V8 JavaScript virtual machine (VM) performance of JavaScript execution has increased dramatically with browser vendors competing for the fastest JavaScript VM. Dart is a new web programming language designed for performance with a custom VM.
+Web browsers as a platform to deliver complex applications with feature sets and performance that are comparable to native desktop applications has become mainstream. All major browsers (Chrome, Firefox, Safari, and IE) include support for displaying 3D graphics through WebGL, playing 3D positional audio through WebAudio. These applications are written directly in JavaScript, Dart, or compiled to JavaScript from C/C++ code through the LLVM based emscripten~~\cite{emscripten} compiler. Starting in 2008 with the advent of the V8 JavaScript virtual machine (VM) performance of JavaScript execution has increased dramatically with browser vendors competing for the fastest JavaScript VM. Dart is a new web programming language designed for performance with a custom VM.
 
 Despite the dramatic increase in performance it has not been possible for web programs to access the dedicated SIMD coprocessors. JavaScript is limited to scalar operations on double precision floating point values and Dart is limited to scalar operations on double precision floating point values and integers. In this paper we introduce:
 
@@ -118,7 +143,7 @@ The bulk of the work is done in parallel and only after the exiting the loop doe
 If the Float32x4 type were available to web programmers and the optimizing compiler is successful in generating code that is free of memory allocation and allows for temporary values to stay in CPU registers, the algorithm can be sped up by 500\%. In the following section, we provide more details on the programming model and how it can be efficiently compiled for x86 and ARM processors.
 
 \section{Bringing SIMD to the Web}
-The SIMD programming model for Dart and JavaScript is designed to give direct control to the programmer (or the Dart or C++ compiler generating JavaScript). It introduces three new 128-bit wide value types: Float32x4, Int32x4, and Float64x2. Each value type stores scalar values in multiple "lanes". For example, Float32x4 has four single precision floating point numbers in lanes labelled: x, y, z, and w. Note that w is the fourth lane and not the first. Each instance is immutable and all operations result in a new instance.
+The SIMD programming model for Dart and JavaScript is designed to give direct control to the programmer (or the Dart or C++ compiler generating JavaScript). It introduces three new 128-bit wide value types: Float32x4, Int32x4, and Float64x2. Each value type stores scalar values in multiple ``lanes''. For example, Float32x4 has four single precision floating point numbers in lanes labelled: x, y, z, and w. Note that w is the fourth lane and not the first. Each instance is immutable and all operations result in a new instance.
 
 \subsection{Primitive Operations}
 This section will focus on the Float32x4 type. The other types offer similar operations but can be limited by a lack of actual instructions in SSE or NEON. For example, there is no Int32x4 divide instruction in either SSE or NEON instruction sets. Emulation of missing instructions is discussed in future work.
@@ -182,21 +207,26 @@ void copy(Float32x4List destination, Float32x4List source,
 }
 \end{verbatim}
 
-Note that on load a new instance of Float32x4 is constructed. In sections \ref{boxing} and \ref{inlining} we discuss how the memory allocation and instance construction is avoided in optimized code.
+Note that on load a new instance of Float32x4 is constructed. In Sections~\ref{boxing} and~\ref{inlining} we discuss how the memory allocation and instance construction is avoided in optimized code.
 
 \subsection{Mapping from high level to low level}
 The programming model is high level with each operation requiring a method call on a heap allocated object and results in a new heap allocated object holding the resulting value. Each value is immutable and storage of temporary values cannot be reused. The design of the programming model was done with care so that when optimized code is generated, the overhead of the high level programming model can be removed. Almost all method calls will be mapped directly to a single CPU instruction. Some operations require slightly longer instruction sequences but so would a hand written assembly programming performing the same operation. Instances will be stored directly inside CPU registers avoiding the cost of memory allocation and object creation. The following section covers how this is accomplished.
 
 \section{Dart VM and V8 implementation}
-We will now discuss the implementation details of the programming model in the Dart VM. Section \ref{V8} discusses the implementation for the V8 VM.
+We will now discuss the implementation details of the programming model in the Dart VM. Section~\ref{V8} discusses the implementation for the V8 VM.
 
 \subsection{Unoptimized Code}
 When a function is first compiled by the Dart VM the generated code is completely generic. Every method call is looked up in the receiving object's class's function table. Every temporary value is allocated in the heap as a full object under control of the GC. 
 
 \subsection{Type Collection}
-The unoptimized code collects important type\cite{typefeedback} information that is used later by the optimizing compiler. At each method call the unoptimized code maintains a cache mapping from receiver class id to address of the function. 
+The unoptimized code collects important type~\cite{typefeedback} information that is used later by the optimizing compiler. At each method call the unoptimized code maintains a cache mapping from receiver class id to address of the function. 
 
-\includegraphics{typecache.eps}
+\ifx\pdfoutput\undefined
+\includegraphics{figures/typecache.eps}
+\else
+\includegraphics{figures/typecache-eps-converted-to.pdf}
+\fi
+
 This data has two important uses:
 \begin{itemize}
 \item Future execution of the unoptimized code will be faster if the receiving object has a class id already seen at the call site. Execution is faster because looking up the function for the method on the receiving object will result in a cache hit, avoiding the expensive lookup and cache update.
@@ -206,17 +236,25 @@ This data has two important uses:
 \subsection{Boxed and Unboxed Values}
 
 \label{boxing}
-The Dart compiler makes a distinction between boxed and \\
-unboxed\cite{unboxing} values. Boxed values are pointers to objects which are allocated in the heap whose life cycle is managed by the GC. Unboxed values are stored in CPU registers. Operations on unboxed values are much more efficient because the values are already contained in CPU registers. An instance of Float32x4 looks like:
+The Dart compiler makes a distinction between boxed and 
+unboxed~\cite{unboxing} values. Boxed values are pointers to objects which are allocated in the heap whose life cycle is managed by the GC. Unboxed values are stored in CPU registers. Operations on unboxed values are much more efficient because the values are already contained in CPU registers. An instance of Float32x4 looks like:
 
-\includegraphics{boxedobject.eps}
+\ifx\pdfoutput\undefined
+\includegraphics{figures/boxedobject.eps}
+\else
+\includegraphics{figures/boxedobject-eps-converted-to.pdf}
+\fi
 
 The object header contains information used for type collection and the GC.
 
 \subsection{Parameter Passing}
 The Dart VM passes all method parameters and the return value as boxed instances. This can have a negative performance impact as unboxed values will be boxed for the method call which will immediately unbox them again.
 
-\includegraphics{boxunboxbox.eps}
+\ifx\pdfoutput\undefined
+\includegraphics{figures/boxunboxbox.eps}
+\else
+\includegraphics{figures/boxunboxbox-eps-converted-to.pdf}
+\fi
 
 \subsection{Inlining}
 \label{inlining}
@@ -275,7 +313,7 @@ t6 <- BinaryFloat32x4Op+(t5, t4);
 return box(t6);
 \end{verbatim}
 
-The optimized code first validates the class of each input value. If any of the types do not match the expected type, the function is deoptimized. For more details on deoptimization see Section \ref{deoptimizing}. After being validated the values are unboxed directly into CPU registers (tN) and the remaining operations are performed directly in CPU registers with no memory I/O. The final step is to box the result so it can be returned.
+The optimized code first validates the class of each input value. If any of the types do not match the expected type, the function is deoptimized. For more details on deoptimization see Section~\ref{deoptimizing}. After being validated the values are unboxed directly into CPU registers (tN) and the remaining operations are performed directly in CPU registers with no memory I/O. The final step is to box the result so it can be returned.
 
 Under the Dart VM the generated SSE code:
 
@@ -396,12 +434,13 @@ Despite the many similarities, there are some important differences in the V8 im
 In this section we will present benchmark results for four different benchmarks:
 \begin{itemize}
 \item \textbf{Average} Averaging many floating point numbers.
-\item \textbf{Mandelbrot} Generating a Mandelbrot\cite{mandelbrot} visualization.
+\item \textbf{Mandelbrot} Generating a Mandelbrot~\cite{mandelbrot} visualization.
 \item \textbf{MatrixMultiply} 4x4 matrix multiplication.
 \item \textbf{VectorTransform} 3D vertex transformation used for 3D rendering.
 \end{itemize}
 
-The benchmarks were run on Ubuntu 13.04 64-bit Linux with Intel CPU (Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz). Full source code of all benchmarks can be obtained at \href{https://github.com/johnmccutchan/ecmascript_simd/}{ECMAScript SIMD Polyfill}. Benchmark results are given as the relative performance gain compared with scalar code in the same language.
+The benchmarks were run on Ubuntu 13.04 64-bit Linux with Intel CPU (Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz). Full source code of all benchmarks can be obtained at from
+a GitHub repository\footnote{\href{https://github.com/johnmccutchan/ecmascript_simd/}{ECMAScript SIMD Polyfill}}. Benchmark results are given as the relative performance gain compared with scalar code in the same language.
 
 \subsection{Dart VM}
 \begin{tabular}{|l|r|}
@@ -440,9 +479,9 @@ The Mandelbrot benchmark is only sped up by 260\% in Dart but is sped up by 380\
 \subsection{C SSE Intrinsics}
 C/C++ compilers offer SIMD intrinsic functions (\verb!xmmintrin.h! and \verb!emmintrin.h!). At compile time these function calls are replaced with a single instruction. Conceptually, the SIMD programming model for Dart and JavaScript is similar but neither Dart nor JavaScript has static type information available at compile time and instead, must rely on run-time type collection (or enforcement) before the compiler can emit the SSE instructions.
 \subsection{SIMD in C\#}
-The Mono C\# compiler provided an API for SIMD\cite{monosimd} programming. This API is considered experimental and directly mimics the SSE instruction set without any concern for portability across different SIMD instruction sets. The SIMD programming model presented in this paper was designed to run across SSE and NEON instruction sets and has been implemented for both.
+The Mono C\# compiler provided an API for SIMD~\cite{monosimd} programming. This API is considered experimental and directly mimics the SSE instruction set without any concern for portability across different SIMD instruction sets. The SIMD programming model presented in this paper was designed to run across SSE and NEON instruction sets and has been implemented for both.
 \subsection{Auto-Vectorization}
-Mozilla has experimented\cite{mozillasimd} with an auto vectorization pass in their JavaScript compiler. The focus of this work was on a gaussian blur algorithm written in JavaScript. Speed gains of approximately 20\% were achieved. This work was never merged and appears abandoned.
+Mozilla has experimented~\cite{mozillasimd} with an auto vectorization pass in their JavaScript compiler. The focus of this work was on a gaussian blur algorithm written in JavaScript. Speed gains of approximately 20\% were achieved. This work was never merged and appears abandoned.
 
 \section{Conclusions and Future Work}
 In this paper we have presented a high level programming model that offers direct control of SIMD coprocessors to web programs in both Dart and JavaScript. We have shown how both Dart and JavaScript VMs can avoid memory allocation and the resulting garbage collector (GC) pressure by avoiding instance creation with inlining and unboxed values. We have discussed the implementations in both the Dart VM and V8. Finally, we have presented benchmarks demonstrating the real world performance gains that this programming model provides. Future work includes:
@@ -453,27 +492,9 @@ In this paper we have presented a high level programming model that offers direc
 \item Supporting for passing and returning unboxed values directly, avoiding the overhead of boxing values on method invocation and return.
 \item Support types that have few SIMD instructions, for example, Int16x8. Speed ups may be seen on these types because efficient native code can that does N scalar operations can be emitted directly.
 \end{itemize}
-\bibliographystyle{abbrvnat}
 
-% The bibliography should be embedded for final submission.
-
-\begin{thebibliography}{}
-\softraggedright
-
-\bibitem[Urs]{typefeedback}
-H\"{o}lzle, Urs and Ungar, David Reconciling Responsiveness with Performance in Pure Object-oriented Languages
-\bibitem[Leroy]{unboxing}
-Xavier Leroy Unboxed objects and polymorphic typing
-\bibitem[Mono C\# SIMD]{monosimd}
-\url{http://docs.go-mono.com/?link=N\%3aMono.Simd}
-\bibitem[Mozilla Auto Vectorization]{mozillasimd}
-\url{https://bugzilla.mozilla.org/show_bug.cgi?id=832718}
-\bibitem[Mandelbrot]{mandelbrot}
-\url{http://en.wikipedia.org/wiki/Benoit_Mandelbrot}
-\bibitem[Emscripten]{emscripten}
-\url{http://en.wikipedia.org/wiki/Emscripten}
-\end{thebibliography}
-
+\bibliographystyle{plain}
+\bibliography{simdonweb}
 
 \end{document}
 
