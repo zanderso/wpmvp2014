@@ -11,11 +11,11 @@ LATEX_BATCH=
 
 all: $(DOC).pdf
 
-$(DOC).pdf: $(DOC).tex $(DOC).bib
-	$(AT) pdflatex $(LATEX_BATCH) $(DOC).tex $(LATEX_QUIET)
+$(DOC).pdf: Makefile $(DOC).tex $(DOC).bib
+	$(AT) pdflatex $(LATEX_BATCH) -shell-escape $(DOC).tex $(LATEX_QUIET)
 	$(AT) bibtex $(DOC)
-	$(AT) pdflatex $(LATEX_BATCH) $(DOC).tex $(LATEX_QUIET)
-	$(AT) pdflatex $(LATEX_BATCH) $(DOC).tex $(LATEX_QUIET)
+	$(AT) pdflatex $(LATEX_BATCH) -shell-escape $(DOC).tex $(LATEX_QUIET)
+	$(AT) pdflatex $(LATEX_BATCH) -shell-escape $(DOC).tex $(LATEX_QUIET)
 
 .PHONY: clean
 
