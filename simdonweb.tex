@@ -92,6 +92,9 @@
 \authorinfo{Haitao Feng}
            {Intel}
            {haitao.feng@intel.com}
+\authorinfo{Nicholas D. Matsakis}
+           {Mozilla Research}
+           {nmatsakis@mozilla.com}
 
 \maketitle
 
@@ -167,7 +170,8 @@ An implementation of the programming model for the Dart VM that has shipped and
 is used in production today.
 
 \item
-An implementation of the programming model for the V8 JavaScript VM.
+An implementation of the programming model for the V8 and SpiderMonkey
+JavaScript VMs.
 
 \item
 Benchmarks that show (depending on the algorithm) a speedup of 300-600\% across
@@ -376,10 +380,10 @@ operation. Instances will be stored directly inside CPU registers avoiding the
 cost of memory allocation and object creation. The following section covers how
 this is accomplished.
 
-\section{Dart VM and V8 implementation}
+\section{Dart VM implementation}
 
 We will now discuss the implementation details of the programming model in the
-Dart VM. Section~\ref{V8} discusses the implementation for the V8 VM.
+Dart VM. Section~\ref{JS} discusses the implementation for JavaScript.
 
 \subsection{Unoptimized Code}
 
@@ -455,7 +459,7 @@ function return.}
 \subsection{Inlining}
 \label{inlining}
 
-Both the Dart VM and V8 make heavy use of inlining to avoid method call
+Both the Dart VM and the JavaScript VMs make heavy use of inlining to avoid method call
 invocation and unnecessary boxing of values. The first form of inlining is
 similar to the inlining done in many compilers, the bodies of small functions
 are copied into the calling function, replacing the method call. The second form
@@ -651,8 +655,8 @@ that the deoptimization occurred.
 An important thing to understand is that only functions which are provided
 stable input types will be optimized.
 
-\subsection{Implementation for JavaScript and V8}
-\label{V8}
+\subsection{Implementation for JavaScript}
+\label{JS}
 
 The SIMD programming model for Dart is used for JavaScript as well. The 128-bit
 wide value types are introduced, but as there are no class and operator
@@ -660,13 +664,12 @@ overloading language features in JavaScript, the syntax of the SIMD API is
 different than Dart's. We introduced a SIMD global module with operations
 grouped by type. The following example demonstrates the syntactic differences.
 Figure~\ref{fig:jssimd} shows the translation of our \ttt{compute} function
-into JavaScript. The V8 implementation is conceptually similar to the
-implementation in the Dart VM.
+into JavaScript.
 
 \begin{figure}
 \begin{small}
 \begin{program}[style=tt, number=true]
-co\tab{}mpute(var a, var b) \{
+fu\tab{}nction compute(a, b) \{
   var c = SIMD.float32x4.add(a, b);
   var d = SIMD.float32x4.mul(a, a);
   var e = SIMD.float32x4.mul(b, b);
@@ -679,6 +682,11 @@ co\tab{}mpute(var a, var b) \{
 SIMD module.}
 \label{fig:jssimd}
 \end{figure}
+
+\subsubsection{Implementation in V8}
+
+The V8 implementation is conceptually similar to the implementation in the Dart
+VM:
 
 \begin{itemize}
 \item
@@ -719,6 +727,40 @@ functions to be modified at runtime, for example, the \ttt{SIMD.float32x4.add}
 method could have been overridden by the program. More checks are required to
 ensure that these operations have not been replaced with user written code. When
 this occurs inlining cannot be performed and performance suffers.
+
+\end{itemize}
+
+\subsubsection{Implementation in SpiderMonkey}
+
+We are currently in the process of implementing the SIMD model for the
+SpiderMonkey engine -- used in the Firefox web browser -- as well. At
+the time of this writing, the SpiderMonkey implementation is able to
+optimize several benchmarks, but it is not yet as mature as the V8 or
+Dart implementations.
+
+\begin{itemize}
+\item
+In the interpreter, 128-bit wide values are represented as objects,
+each of which contains a pointer to a memory block storing the SIMD
+value. This is not entirely faithful to the proposed specification, in
+which the SIMD values are not objects but rather a new kind of
+primitive JS value. Work on extending the set of primitive JS types
+that SpiderMonkey supports is already underway, and we plan to
+leverage that work once it completes so as to adhere more closely to
+the specification.
+
+\item
+In JIT-optimized code, the SIMD values are aggressively unboxed. Calls
+to SIMD operations are detected and replaced with native variants that
+operate directly on the unboxed SIMD values. Extensions were needed to
+the register allocator and bailout mechanism so that they could
+support 128-bit values.
+
+\item 
+If a bailout occurs, the unboxed SIMD values must be boxed into
+objects so that the interpeter can resume execution. The same is true
+whenever an unboxed value escapes out of the current function being
+compiled, with the exception of stores into SIMD arrays.
 
 \end{itemize}
 
