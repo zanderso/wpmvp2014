@@ -99,12 +99,12 @@
 \authorinfo{Haitao Feng}
            {Intel Corp.}
            {haitao.feng@intel.com}
-\authorinfo{Zachary Anderson}
-           {Google Inc.}
-           {zra@google.com}
 \authorinfo{Nicholas D. Matsakis}
            {Mozilla Research}
            {nmatsakis@mozilla.com}
+\authorinfo{Zachary Anderson}
+           {Google Inc.}
+           {zra@google.com}
 
 \maketitle
 
@@ -257,10 +257,11 @@ result in a new instance.
 
 \subsection{Primitive Operations}
 
-This section will focus on the \ttt{Float32x4} type. The other types offer similar
-operations but can be limited by a lack of actual instructions in SSE or Neon.
-For example, there is no \ttt{Int32x4} divide instruction in either SSE or Neon
-instruction sets. Emulation of missing instructions is discussed in future work.
+This section will focus on the \ttt{Float32x4} type. The other types offer
+similar operations but can be limited by a lack of actual instructions in SSE or
+Neon. For example, there is no \ttt{Int32x4} divide instruction in either SSE or
+Neon instruction sets. Emulation of missing instructions is discussed in future
+work.
 
 \ttt{Float32x4} supports standard arithmetic operations (+, -, *, /) as well as
 approximate square root, reciprocal square root, and reciprocal. It also
@@ -469,11 +470,11 @@ function return.}
 \subsection{Inlining}
 \label{inlining}
 
-Both the Dart VM and the JavaScript VMs make heavy use of inlining to avoid method call
-invocation and unnecessary boxing of values. The first form of inlining is
-similar to the inlining done in many compilers, the bodies of small functions
-are copied into the calling function, replacing the method call. The second form
-of inlining, replacement of runtime provided functions with compiler
+Both the Dart VM and the JavaScript VMs make heavy use of inlining to avoid
+method call invocation and unnecessary boxing of values. The first form of
+inlining is similar to the inlining done in many compilers, the bodies of small
+functions are copied into the calling function, replacing the method call. The
+second form of inlining, replacement of runtime provided functions with compiler
 intermediate representation (IR) instructions is the key to achieving high
 performance with this programming model. Consider the code in
 Figure~\ref{fig:unoptimized}.
@@ -688,8 +689,6 @@ in Section~\ref{sec:benchmarks}.
 We leave as future work finding minimal Neon sequences to implement the more
 general instructions provided by SSE.
 
-\subsection{Implementation for JavaScript and V8}
-\label{V8}
 
 \subsection{Implementation for JavaScript}
 \label{JS}
@@ -825,7 +824,7 @@ chan/ecmascript_simd/}{ECMAScript SIMD Polyfill}}.
 \end{itemize}
 
 
-We ran these benchmarks on the Dart VM, V8, and IonMonkey using Dart and
+We ran these benchmarks on the Dart VM, V8, and SpiderMonkey using Dart and
 JavaScript implementations as appropriate.
 %
 We used an Ubuntu 13.04 64-bit Linux system with an Intel CPU
@@ -834,7 +833,7 @@ We used an Ubuntu 13.04 64-bit Linux system with an Intel CPU
 We also ran the benchmarks on the Dart VM running on a Nexus 7, ARM Android
 device.
 %
-Since ports to ARM/Neon are not yet complete for V8 and IonMonkey we did not
+Since ports to ARM/Neon are not yet complete for V8 and SpiderMonkey we did not
 run the JavaScript implementations on the Nexus 7.
 
 
@@ -879,7 +878,7 @@ divided by the SIMD time.
  VectorTransform & 30 & 6 & \textbf{5.0x} \\
  \hline
 \hline
-\multicolumn{4}{c}{IonMonkey} \\
+\multicolumn{4}{c}{SpiderMonkey} \\
 \hline
  Average & 116 & 21 & \textbf{5.5x} \\
  \hline
@@ -891,7 +890,7 @@ divided by the SIMD time.
  \hline
 \end{tabular}
 \end{center}
-\caption{Benchmark results for Dart, V8, and IonMonkey on our x64 Linux
+\caption{Benchmark results for Dart, V8, and SpiderMonkey on our x64 Linux
 machine.}
 \label{tab:x64-benchmarks}
 \end{table}
@@ -924,7 +923,7 @@ The results of our benchmarks are shown in Tables~\ref{tab:x64-benchmarks}
 and~\ref{tab:arm-benchmarks}.
 %
 Table~\ref{tab:x64-benchmarks} shows results on our Intel machine for Dart, V8,
-and IonMonkey.
+and SpiderMonkey.
 %
 Table~\ref{tab:arm-benchmarks} shows results on a Nexus 7 device for Dart. 
 %
@@ -954,7 +953,7 @@ performing the calculation, while the SIMD code requires no conversion,
 implying some saved time for the SIMD codes.
 
 
-As for the Mandelbrot benchmark, Dart and IonMonkey achieved only speedups of
+As for the Mandelbrot benchmark, Dart and SpiderMonkey achieved only speedups of
 2.6x and 2.3x respectively, while V8 achieved a speedup of 3.6x.
 %
 The reason for the discrepancy is that the Dart VM has not fully implemented the
