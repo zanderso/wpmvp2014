@@ -192,13 +192,17 @@ tracing, and cryptography.
 \section{Lack of SIMD programmability for web applications}
 
 Many algorithms can be sped up by taking advantage of SIMD co-processors. A
-simple example is the averaging of an array of numbers, as shown in
-Figure~\ref{fig:scalar-average} written in Dart.
+simple example is the averaging of an array of numbers. The top of
+Figure~\ref{fig:average} shows a scalar implementation written in Dart. The
+algorithm simply accumulates all the data points and computes the average by
+dividing by the number of data points. The bottom of the figure shows a SIMD
+implementation also written in Dart. This algorithm can trivially take advantage
+of SIMD co-processors by adding 4 numbers at the same time.
 
 \begin{figure}
 \begin{small}
 \begin{program}[style=tt, number=true]
-do\tab{}uble average(Float32List data) \{
+do\tab{}uble scalar\_average(Float32List data) \{
   var sum = 0.0;
   fo\tab{}r (var i = 0; i < data.length; i++) \{
     sum += data[i];\untab{}
@@ -207,19 +211,10 @@ do\tab{}uble average(Float32List data) \{
 \}
 \end{program}
 \end{small}
-\caption{Finding the average of an array of numbers in Dart.}
-\label{fig:scalar-average}
-\end{figure}
-
-The algorithm simply accumulates all the data points and computes the average by
-dividing by the number of data points. This algorithm can trivially take
-advantage of SIMD co-processors by adding 4 numbers at the same time, as
-shown in Figure~\ref{fig:simd-average}, also in Dart.
-
-\begin{figure}
+\ \ \\ \ \ \\
 \begin{small}
 \begin{program}[style=tt, number=true]
-do\tab{}uble average(Float32x4List data) \{
+do\tab{}uble simd\_average(Float32x4List data) \{
   var sum = new Float32x4.zero();
   fo\tab{}r (var i = 0; i < data.length; i++) \{
     sum += data[i];\untab{}
@@ -229,8 +224,9 @@ do\tab{}uble average(Float32x4List data) \{
 \}
 \end{program}
 \end{small}
-\caption{Finding the average of an array of numbers in Dart using SIMD.}
-\label{fig:simd-average}
+\caption{Scalar (top) and SIMD (bottom) implementations of an algorithm to find
+the average of an array of numbers.}
+\label{fig:average}
 \end{figure}
 
 The bulk of the work is done in parallel and only after exiting the loop
@@ -413,7 +409,7 @@ class's corresponding function, as shown in Figure~\ref{fig:typecache}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.33\textwidth]{figures/typecache.eps}
+\includegraphics[width=0.25\textwidth]{figures/typecache.eps}
 \end{center}
 \caption{A call-site's type-cache.}
 \label{fig:typecache}
@@ -445,7 +441,7 @@ contains information used for type collection and GC.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.33\textwidth]{figures/boxedobject.eps}
+\includegraphics[width=0.25\textwidth]{figures/boxedobject.eps}
 \end{center}
 \caption{A boxed SIMD value.}
 \label{fig:boxedobject}
@@ -460,7 +456,7 @@ Figure~\ref{fig:boxunboxbox}.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=0.33\textwidth]{figures/boxunboxbox.eps}
+\includegraphics[width=0.25\textwidth]{figures/boxunboxbox.eps}
 \end{center}
 \caption{A SIMD value being boxed and unboxed for parameter passing and
 function return.}
