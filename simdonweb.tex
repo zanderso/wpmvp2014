@@ -804,12 +804,11 @@ compiled, with the exception of stores into SIMD arrays.
 
 \section{Benchmarks}
 \label{sec:benchmarks}
+In this section we introduce a variety of application domains that can benefit
+from SIMD arithmetic. We discuss a variety of benchmarks that we have
+implemented. Finally, we present benchmark results.
 
-In this section we will present benchmark results for four different benchmarks.
-%
-Full source code of these benchmarks is available from a GitHub
-repository\footnote{\href{https://github.com/johnmccut
-chan/ecmascript_simd/}{ECMAScript SIMD Polyfill}}.
+\subsection{Application Domains}
 %
 The ideas behind these benchmarks are twofold:
 %
@@ -825,7 +824,7 @@ operations
 For the benchmarks to be meaningful, they should cover at least some of the base
 functionality required for application domains that benefit from SIMD
 programming. Some (not all) of those domains are; 2D graphics
-(e.g. filters, rendering) and 3D graphics (e.g. webGL).  There are other
+(e.g. filters, rendering) and 3D graphics (e.g. WebGL).  There are other
 domains, such as computational fluid dynamics, finance (Black-Sholes),
 cryptography, video processing, audio processing, etc. However, we haven't
 extracted meaningful kernels for typical SIMD kernels from all of those domains
@@ -834,46 +833,63 @@ yet.
 For the benchmarks to be small, they should mostly target select individual
 operations.
 %
-The current set of benchmarks cover these application domains:
+The current set of benchmarks cover the following application domains:
 
 \begin{itemize}
-\item 3D Graphics
+\item
+\textbf{3D Graphics}
 This application domain is tailor made for use of Float32x4 operations, because
 most of the arithmetic involved operates on 4x4 or 3x3 matrices and vectors.
 We've picked a few of the common operations to showcase the impact of SIMD.
 %
 The operations covered so far are:
 \begin{itemize}
-\item Vertex Transformation: Transformation of 4 element vector by 4x4 matrix
-\item Matrix Transpose: Transposition of 4x4 matrix
-\item Matrix Inversion: Compute the inverse of a 4x4 matrix
-\item Matrix Multiplication: Multiply two 4x4 matrices
+\item
+\textbf{Vertex Transformation} Transformation of 4 element vector by 4x4 matrix
+\item \textbf{Matrix Transpose} Transposition of 4x4 matrix
+\item \textbf{Matrix Inversion} Compute the inverse of a 4x4 matrix
+\item \textbf{Matrix Multiplication} Multiply two 4x4 matrices
 \end{itemize}
 
-\item Cryptography
+\item \textbf{Cryptography}
 This might not be a typical domain where use of SIMD operations can improve
-performance, but we found a hot function in the implementation of the
-Rijndael cipher that would benefit, so we extracted it into a benchmark kernel.
+performance, but we found a hot function in the implementation of the Rijndael
+cipher
+\footnote{\href{http://csrc.nist.gov/archive/aes/rijndael/Rijndael-ammended.pdf}
+{Rijndael cipher}}. that would benefit, so we extracted it into a benchmark
+kernel.
 
 \begin{itemize}
-\item Shift Rows (shift/rotate of row values in 4x4 matrix)
+\item \textbf{Shift Rows} (shift/rotate of row values in 4x4 matrix)
 \end{itemize}
 
-\item Vector Math Computations
+\item
+\textbf{Vector Math Computations}
 Math operations on small vectors, beyond simple algebraic operations (+,-,*,/),
 typically include fairly complicated uses of SIMD operations, i.e. not just
-individual SIMD instructions.  Intel provides a Small Vector Math Library for
-that purpose for use in C/C++ SIMD code.  The following benchmark is an
-equivalent JS implementation of the sine() function. It is envisioned that such
-base math operations (sin, cos, exp, pow, etc) will be useful for things like
-signal processing and physics engines.  Showing that basic math operations can
-be implemented using the JS SIMD API, with performance improvements equivalent
-to that of highly optimized C/C++ functions, shows that JS truly has the
-potential to become the implementation language for performance critical code.
-
-\end{itemize}
+individual SIMD instructions.  Intel provides a
+Short Vector Math Library
+\footnote{
+\href{http://software.intel.com/sites/products/documentation/doclib/iss/2013/compiler/cpp-lin/index.htm\#GUID-7580634E-88D9-4B67-94ED-8472CCC5AF68.htm}
+{Short Vector Math Library}} for that purpose for use in C/C++ SIMD code.
+It is envisioned that such base math operations (sin, cos, exp, pow, etc) will
+be useful for things like signal processing and physics engines.  In order to
+show that a similar library could be implemented using the SIMD programming
+API in Dart and JavaScript, with performance improvements equivalent to that of
+highly optimized C/C++ functions, we have implemented a benchmark that computes
+sine.
 
 \begin{itemize}
+\item \textbf{Sinex4} Compute 4 sine values at once.
+\end{itemize}
+
+\subsection{Results}
+
+In this section we discuss  present benchmark results for four different benchmarks.
+%
+Full source code of these benchmarks is available from a GitHub
+repository\footnote{\href{https://github.com/johnmccut
+chan/ecmascript_simd/}{ECMAScript SIMD Polyfill}}.
 
 \item
 \textbf{Average} Averaging many floating point numbers.
