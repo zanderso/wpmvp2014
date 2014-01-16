@@ -75,19 +75,19 @@
 \setlength{\pdfpageheight}{\paperheight}
 \setlength{\pdfpagewidth}{\paperwidth}
 
-\conferenceinfo{Workshop on Programming Models for SIMD/Vector Processing '14}{February, 2014, Orlando, FL, USA} 
-\copyrightyear{2014} 
-\copyrightdata{978-1-nnnn-nnnn-n/yy/mm} 
+\conferenceinfo{Workshop on Programming Models for SIMD/Vector Processing '14}{February, 2014, Orlando, FL, USA}
+\copyrightyear{2014}
+\copyrightdata{978-1-nnnn-nnnn-n/yy/mm}
 \doi{nnnnnnn.nnnnnnn}
 
-% Uncomment one of the following two, if you are not going for the 
+% Uncomment one of the following two, if you are not going for the
 % traditional copyright transfer agreement.
 
-%\exclusivelicense                % ACM gets exclusive license to publish, 
+%\exclusivelicense                % ACM gets exclusive license to publish,
                                   % you retain copyright
 
 %\permissiontopublish             % ACM gets nonexclusive license to publish
-                                  % (paid open-access papers, 
+                                  % (paid open-access papers,
                                   % short abstracts)
 
 
@@ -105,6 +105,9 @@
 \authorinfo{Zachary Anderson}
            {Google Inc.}
            {zra@google.com}
+\authorinfo{Peter Jensen}
+           {Intel Corp.}
+           {peter.jensen@intel.com}
 
 \maketitle
 
@@ -156,7 +159,7 @@ scalar operations on double precision floating point values and Dart is limited
 to scalar operations on double precision floating point values and integers. In
 this paper we introduce:
 
-\begin{itemize} 
+\begin{itemize}
 \item
 A SIMD programming model for Dart and JavaScript languages. The programming
 model is high level but allows for explicit control over the SIMD co-processors.
@@ -787,7 +790,7 @@ operate directly on the unboxed SIMD values. Extensions were needed to
 the register allocator and bailout mechanism so that they could
 support 128-bit values.
 
-\item 
+\item
 If a bailout occurs, the unboxed SIMD values must be boxed into
 objects so that the interpeter can resume execution. The same is true
 whenever an unboxed value escapes out of the current function being
@@ -797,14 +800,92 @@ compiled, with the exception of stores into SIMD arrays.
 
 \section{Benchmarks}
 \label{sec:benchmarks}
+In this section we introduce a variety of application domains that can benefit
+from SIMD arithmetic. We discuss a variety of benchmarks that we have
+implemented. Finally, we present benchmark results.
 
-In this section we will present benchmark results for four different benchmarks.
+\subsection{Application Domains}
+%
+The ideas behind these benchmarks are twofold:
+%
+\begin{enumerate}
+\item
+They should reflect meaningful operations typically done with SIMD programming
+\item
+They should be small and easy to use for VM implementers to drive the
+performance work in the VMs, when implementing JIT compiler support for those
+operations
+\end{enumerate}
+%
+For the benchmarks to be meaningful, they should cover at least some of the base
+functionality required for application domains that benefit from SIMD
+programming. Some (not all) of those domains are; 2D graphics
+(e.g. filters, rendering) and 3D graphics (e.g. WebGL).  There are other
+domains, such as computational fluid dynamics, finance (Black-Sholes),
+cryptography, video processing, audio processing, etc. However, we haven't
+extracted meaningful kernels for typical SIMD kernels from all of those domains
+yet.
+%
+For the benchmarks to be small, they should mostly target select individual
+operations.
+%
+The current set of benchmarks cover the following application domains:
+
+\begin{itemize}
+\item
+\textbf{3D Graphics}
+This application domain is tailor made for use of Float32x4 operations, because
+most of the arithmetic involved operates on 4x4 or 3x3 matrices and vectors.
+We've picked a few of the common operations to showcase the impact of SIMD.
+%
+The operations covered so far are:
+\begin{itemize}
+\item
+\textbf{Vertex Transformation} Transformation of 4 element vector by 4x4 matrix
+\item \textbf{Matrix Transpose} Transposition of 4x4 matrix
+\item \textbf{Matrix Inversion} Compute the inverse of a 4x4 matrix
+\item \textbf{Matrix Multiplication} Multiply two 4x4 matrices
+\end{itemize}
+
+\item \textbf{Cryptography}
+This might not be a typical domain where use of SIMD operations can improve
+performance, but we found a hot function in the implementation of the Rijndael
+cipher
+\footnote{\href{http://csrc.nist.gov/archive/aes/rijndael/Rijndael-ammended.pdf}
+{Rijndael cipher}}. that would benefit, so we extracted it into a benchmark
+kernel.
+
+\begin{itemize}
+\item \textbf{Shift Rows} (shift/rotate of row values in 4x4 matrix)
+\end{itemize}
+
+\item
+\textbf{Vector Math Computations}
+Math operations on small vectors, beyond simple algebraic operations (+,-,*,/),
+typically include fairly complicated uses of SIMD operations, i.e. not just
+individual SIMD instructions.  Intel provides a
+Short Vector Math Library
+\footnote{
+\href{http://software.intel.com/sites/products/documentation/doclib/iss/2013/compiler/cpp-lin/index.htm\#GUID-7580634E-88D9-4B67-94ED-8472CCC5AF68.htm}
+{Short Vector Math Library}} for that purpose for use in C/C++ SIMD code.
+It is envisioned that such base math operations (sin, cos, exp, pow, etc) will
+be useful for things like signal processing and physics engines.  In order to
+show that a similar library could be implemented using the SIMD programming
+API in Dart and JavaScript, with performance improvements equivalent to that of
+highly optimized C/C++ functions, we have implemented a benchmark that computes
+sine.
+
+\begin{itemize}
+\item \textbf{Sinex4} Compute 4 sine values at once.
+\end{itemize}
+
+\subsection{Results}
+
+In this section we discuss  present benchmark results for four different benchmarks.
 %
 Full source code of these benchmarks is available from a GitHub
 repository\footnote{\href{https://github.com/johnmccut
 chan/ecmascript_simd/}{ECMAScript SIMD Polyfill}}.
-
-\begin{itemize}
 
 \item
 \textbf{Average} Averaging many floating point numbers.
@@ -921,9 +1002,9 @@ and~\ref{tab:arm-benchmarks}.
 Table~\ref{tab:x64-benchmarks} shows results on our Intel machine for Dart, V8,
 and SpiderMonkey.
 %
-Table~\ref{tab:arm-benchmarks} shows results on a Nexus 7 device for Dart. 
+Table~\ref{tab:arm-benchmarks} shows results on a Nexus 7 device for Dart.
 %
-The benchmark data show significant speedups across a variety of algorithms, 
+The benchmark data show significant speedups across a variety of algorithms,
 implementations and across the two platforms when we use SIMD operations.
 %
 Further, our JavaScript and Dart benchmark kernels and timing harness are as
@@ -994,7 +1075,7 @@ implementations in both the Dart VM and V8. Finally, we have presented
 benchmarks demonstrating the real world performance gains that this programming
 model provides. Future work includes:
 
-\begin{itemize} 
+\begin{itemize}
 \item
 Support for wider (256-bit and 512-bit) SIMD register widths (AVX and AVX-512)
 and the natural data types they offer, for example, \ttt{Float32x8} and
