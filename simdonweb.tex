@@ -800,36 +800,34 @@ compiled, with the exception of stores into SIMD arrays.
 
 \section{Benchmarks}
 \label{sec:benchmarks}
+
 In this section we introduce a variety of application domains that can benefit
 from SIMD arithmetic. We discuss a variety of benchmarks that we have
 implemented. Finally, we present benchmark results.
 
 \subsection{Application Domains}
 %
-The ideas behind these benchmarks are twofold:
+At this stage in our implementation, benchmarks should have the
+following two goals:
 %
 \begin{enumerate}
 \item
-They should reflect meaningful operations typically done with SIMD programming
+They should reflect meaningful operations typically done with SIMD programming,
 \item
 They should be small and easy to use for VM implementers to drive the
 performance work in the VMs, when implementing JIT compiler support for those
-operations
+operations.
 \end{enumerate}
-%
+
 For the benchmarks to be meaningful, they should cover at least some of the base
 functionality required for application domains that benefit from SIMD
-programming. Some (not all) of those domains are; 2D graphics
-(e.g. filters, rendering) and 3D graphics (e.g. WebGL).  There are other
-domains, such as computational fluid dynamics, finance (Black-Sholes),
-cryptography, video processing, audio processing, etc. However, we haven't
-extracted meaningful kernels for typical SIMD kernels from all of those domains
-yet.
-%
-For the benchmarks to be small, they should mostly target select individual
-operations.
-%
-The current set of benchmarks cover the following application domains:
+programming. Some (not all) of those domains are; 2D graphics (e.g. filters,
+rendering) and 3D graphics (e.g. WebGL).  There are other domains, such as
+computational fluid dynamics, finance (Black-Sholes), cryptography, video
+processing, audio processing, etc. However, we have not yet extracted meaningful
+kernels for typical SIMD kernels from all of those domains. For the benchmarks
+to be small, they should mostly target select individual operations. The current
+set of benchmarks cover the following application domains:
 
 \begin{itemize}
 \item
@@ -841,10 +839,10 @@ We've picked a few of the common operations to showcase the impact of SIMD.
 The operations covered so far are:
 \begin{itemize}
 \item
-\textbf{Vertex Transformation} Transformation of 4 element vector by 4x4 matrix
-\item \textbf{Matrix Transpose} Transposition of 4x4 matrix
-\item \textbf{Matrix Inversion} Compute the inverse of a 4x4 matrix
-\item \textbf{Matrix Multiplication} Multiply two 4x4 matrices
+\textbf{Vertex Transformation} Transformation of 4 element vector by 4x4 matrix,
+\item \textbf{Matrix Transpose} Transposition of 4x4 matrix,
+\item \textbf{Matrix Inversion} Compute the inverse of a 4x4 matrix,
+\item \textbf{Matrix Multiplication} Multiply two 4x4 matrices.
 \end{itemize}
 
 \item \textbf{Cryptography}
@@ -852,7 +850,7 @@ This might not be a typical domain where use of SIMD operations can improve
 performance, but we found a hot function in the implementation of the Rijndael
 cipher
 \footnote{\href{http://csrc.nist.gov/archive/aes/rijndael/Rijndael-ammended.pdf}
-{Rijndael cipher}}. that would benefit, so we extracted it into a benchmark
+{Rijndael cipher}} that would benefit, so we extracted it into a benchmark
 kernel.
 
 \begin{itemize}
@@ -879,27 +877,18 @@ sine.
 \item \textbf{Sinex4} Compute 4 sine values at once.
 \end{itemize}
 
+\end{itemize}
+
 \subsection{Results}
 
-In this section we discuss  present benchmark results for four different benchmarks.
+In this section we present benchmark results for our benchmarks.
 %
 Full source code of these benchmarks is available from a GitHub
 repository\footnote{\href{https://github.com/johnmccut
 chan/ecmascript_simd/}{ECMAScript SIMD Polyfill}}.
-
-\item
-\textbf{Average} Averaging many floating point numbers.
-
-\item
-\textbf{Mandelbrot} Generating a Mandelbrot~\cite{mandelbrot} visualization.
-
-\item
-\textbf{MatrixMultiply} 4x4 matrix multiplication.
-
-\item
-\textbf{VectorTransform} 3D vertex transformation used for 3D rendering.
-\end{itemize}
-
+%
+In addition to the benchmarks discussed above, we also include a simple average
+microbenchmark as well as a larger Mandelbrot~\cite{mandelbrot} visualization.
 
 We ran these benchmarks on the Dart VM, V8, and SpiderMonkey using Dart and
 JavaScript implementations as appropriate.
@@ -941,7 +930,13 @@ divided by the SIMD time.
 \hline
  MatrixMultiply & 68 & 17 & \textbf{4.0x} \\
 \hline
+ MatrixInverse & 181 & 29 & \textbf{6.2x} \\
+\hline
+ MatrixTranspose & 1220 & 523 & \textbf{2.3x} \\
+\hline
  VectorTransform & 25 & 5 & \textbf{5.0x} \\
+\hline
+ ShiftRows & 5658 & 623 & \textbf{9.1x} \\
 \hline
 \hline
 \multicolumn{4}{c}{V8} \\
@@ -952,7 +947,17 @@ divided by the SIMD time.
  \hline
  MatrixMultiply & 74 & 20 & \textbf{3.7x} \\
  \hline
+ MatrixInverse & 189 & 21 & \textbf{9.0x} \\
+ \hline
+ MatrixTranspose & 1037 & 408 & \textbf{2.5x} \\
+ \hline
  VectorTransform & 30 & 6 & \textbf{5.0x} \\
+ \hline
+ ShiftRows & 6067 & 880 & \textbf{6.9x} \\
+ \hline
+ AOBench & 1488 & 736 & \textbf{2.0x} \\
+ \hline
+ SineX4 & 9538 & 6568 & \textbf{1.5x} \\
  \hline
 \hline
 \multicolumn{4}{c}{SpiderMonkey} \\
@@ -963,7 +968,13 @@ divided by the SIMD time.
  \hline
  MatrixMultiply & 97 & 19 & \textbf{5.1x} \\
  \hline
+ MatrixInverse & 294 & 26 & \textbf{11.3x} \\
+ \hline
+ MatrixTranspose & 1237 & 488 & \textbf{2.5} \\
+ \hline
  VectorTransform & 33 & 8 & \textbf{4.1x} \\
+ \hline
+ ShiftRows & 6067 & 1956 & \textbf{3.1x} \\
  \hline
 \end{tabular}
 \end{center}
@@ -987,7 +998,13 @@ Mandelbrot & 1806000 & 892333 & \textbf{2.0x} \\
 \hline
 MatrixMultiply & 630 & 224 & \textbf{2.8x} \\
 \hline
+MatrixInverse & 1506 & 345 & \textbf{4.4x} \\
+\hline
+MatrixTranspose & 6335 & 5488 & \textbf{1.2x} \\
+\hline
 VectorTransform & 173 & 67 & \textbf{2.6x} \\
+\hline
+ShiftRows & 33148 & 3219 & \textbf{10.3x} \\
 \hline
 \end{tabular}
 \end{center}
@@ -1002,7 +1019,8 @@ and~\ref{tab:arm-benchmarks}.
 Table~\ref{tab:x64-benchmarks} shows results on our Intel machine for Dart, V8,
 and SpiderMonkey.
 %
-Table~\ref{tab:arm-benchmarks} shows results on a Nexus 7 device for Dart.
+Table~\ref{tab:arm-benchmarks} shows results on a Nexus 7 device for
+Dart~\footnote{ARM ports of SIMD for V8 and SpiderMonkey are not yet complete.}.
 %
 The benchmark data show significant speedups across a variety of algorithms,
 implementations and across the two platforms when we use SIMD operations.
@@ -1036,6 +1054,9 @@ As for the Mandelbrot benchmark, Dart and SpiderMonkey achieved only speedups of
 The reason for the discrepancy is that the Dart VM has not fully implemented the
 necessary inlining optimizations for the \ttt{Int32x4} type which is used in the
 Mandelbrot benchmark.
+%
+At this early stage, we find these benchmark results encouraging, and that they
+will be useful in guiding our further implementation efforts.
 
 
 \section{Related Work}
