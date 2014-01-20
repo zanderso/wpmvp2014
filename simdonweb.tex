@@ -353,7 +353,8 @@ Up until this point we have only discussed individual values but in order to be
 a generally useful programming model, compact and cache-friendly array storage
 of each type is introduced. \ttt{Float32x4List}, \ttt{Int32x4List}, and
 \ttt{Float64x2List} offer contiguous storage of \ttt{Float32x4}, \ttt{Int32x4},
-and \ttt{Float64x2} values. Figure~\ref{fig:load-store} shows loading and
+and \ttt{Float64x2} values. These lists do not store instances
+but their 128-bit payloads. Figure~\ref{fig:load-store} shows loading and
 storing SIMD values in Dart.
 
 \begin{figure}
