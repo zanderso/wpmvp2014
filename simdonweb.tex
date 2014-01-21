@@ -146,7 +146,8 @@ for displaying 3D graphics through WebGL, playing 3D positional audio through
 WebAudio. These applications are written directly in JavaScript, Dart, or
 compiled to JavaScript from C/C++ code through the LLVM based
 Emscripten~\cite{emscripten} compiler. Starting in 2008 with the advent of the
-V8 JavaScript virtual machine (VM) performance of JavaScript execution has
+V8 JavaScript Virtual Machine (VM) and 2009's TraceMonkey~\cite{tracemonkey}
+JavaScript Virtual machine performance of JavaScript execution has
 increased dramatically with browser vendors competing for the fastest JavaScript
 VM. Dart is a new web programming language designed for performance with a
 custom VM.
@@ -350,7 +351,8 @@ Up until this point we have only discussed individual values but in order to be
 a generally useful programming model, compact and cache-friendly array storage
 of each type is introduced. \ttt{Float32x4List}, \ttt{Int32x4List}, and
 \ttt{Float64x2List} offer contiguous storage of \ttt{Float32x4}, \ttt{Int32x4},
-and \ttt{Float64x2} values. Figure~\ref{fig:load-store} shows loading and
+and \ttt{Float64x2} values. These lists do not store instances
+but their 128-bit payloads. Figure~\ref{fig:load-store} shows loading and
 storing SIMD values in Dart.
 
 \begin{figure}
@@ -1114,6 +1116,13 @@ ups may be seen on these types because efficient native code can that does N
 scalar operations can be emitted directly.
 
 \end{itemize}
+
+\section{Acknowledments}
+We would like to thank Mohammad R Haghighat
+for the technical direction, Heidi Pan for the SIMD benchmark
+(aobench.js), Ivan Jibaja for contributing the Firefox IonMonkey
+implementation, Ningxin Hu and Weiliang Lin for contributing the
+Google V8 implementation.
 
 \bibliographystyle{plain}
 \bibliography{simdonweb}
